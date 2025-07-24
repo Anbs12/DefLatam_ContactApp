@@ -20,6 +20,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Activity para agregar o editar contactos -->
+        <activity
+            android:name=".AgregarContactoActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
