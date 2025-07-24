@@ -1,6 +1,5 @@
 package com.example.deflatam_contactapp.model
 
-
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey

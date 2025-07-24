@@ -3,11 +3,13 @@ package com.example.deflatam_contactapp
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.deflatam_contactapp.adapter.ContactosAdapter
 import com.example.deflatam_contactapp.databinding.ActivityMainBinding
+import com.example.deflatam_contactapp.model.Contacto
 import com.example.deflatam_contactapp.viewmodel.ContactosViewModel
 
 class MainActivity : AppCompatActivity() {
@@ -28,14 +30,19 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
 
         // Configurar el RecyclerView y su adaptador
-        val adapter = ContactosAdapter { contacto ->
-            // Acción al hacer clic en un contacto: abrir para editar
-            val intent = Intent(this, AgregarContactoActivity::class.java)
-            intent.putExtra(AgregarContactoActivity.EXTRA_CONTACTO_ID, contacto.id)
-            // Aquí deberías pasar el objeto completo o su ID para recuperarlo
-            // en la siguiente actividad. Pasar el ID es más eficiente.
-            startActivity(intent)
-        }
+        val adapter = ContactosAdapter(
+            { contacto ->
+                // Acción al hacer clic en un contacto: abrir para editar
+                val intent = Intent(this, AgregarContactoActivity::class.java)
+                intent.putExtra(AgregarContactoActivity.EXTRA_CONTACTO_ID, contacto.id)
+                // Aquí deberías pasar el objeto completo o su ID para recuperarlo
+                // en la siguiente actividad. Pasar el ID es más eficiente.
+                startActivity(intent)
+            },
+            onContactoLongClicked = {
+                mostrarDialogoDeConfirmacion(contacto = it)
+            }
+        )
         binding.recyclerViewContactos.adapter = adapter
         binding.recyclerViewContactos.layoutManager = LinearLayoutManager(this)
 
@@ -67,5 +74,20 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
         })
+    }
+
+    /**
+     * NUEVO: Muestra un diálogo de confirmación antes de eliminar.
+     */
+    private fun mostrarDialogoDeConfirmacion(contacto: Contacto) {
+        AlertDialog.Builder(this)
+            .setTitle("Eliminar Contacto")
+            .setMessage("¿Estás seguro de que deseas eliminar a ${contacto.nombre} ?")
+            .setIcon(R.drawable.ic_delete)
+            .setPositiveButton("Eliminar") { _, _ ->
+                contactosViewModel.eliminarContacto(contacto)
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
     }
 }

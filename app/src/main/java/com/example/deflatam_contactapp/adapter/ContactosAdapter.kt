@@ -12,7 +12,10 @@ import com.example.deflatam_contactapp.model.Contacto
  * Adaptador para mostrar la lista de contactos en un RecyclerView.
  * Usa Data Binding y maneja los clics en los items.
  */
-class ContactosAdapter(private val onItemClicked: (Contacto) -> Unit) :
+class ContactosAdapter(
+    private val onItemClicked: (Contacto) -> Unit,
+    private val onContactoLongClicked: (Contacto) -> Unit
+) :
     ListAdapter<Contacto, ContactosAdapter.ContactoViewHolder>(ContactosComparator()) {
 
     /**
@@ -36,6 +39,11 @@ class ContactosAdapter(private val onItemClicked: (Contacto) -> Unit) :
             onItemClicked(contactoActual)
         }
         holder.bind(contactoActual)
+        // Se asigna el listener para la pulsación larga
+        holder.itemView.setOnLongClickListener {
+            onContactoLongClicked(contactoActual)
+            true // Indica que el evento se ha consumido
+        }
     }
 
     /**
