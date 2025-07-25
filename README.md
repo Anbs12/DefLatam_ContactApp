@@ -12,8 +12,8 @@ con Room Database y LiveData.
  - ✅Estados de carga y error
 
  Retos Adicionales
- - Sincronización con contactos del dispositivo
- - Exportar contactos a vCard
+ - ✅Sincronización con contactos del dispositivo
+ - ✅Exportar contactos a vCard
  - Integración con redes sociales
  - Llamadas y mensajes directos
  - Grupos de contactos
