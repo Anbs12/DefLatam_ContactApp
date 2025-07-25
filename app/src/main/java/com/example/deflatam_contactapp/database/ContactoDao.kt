@@ -61,5 +61,15 @@ interface ContactoDao {
     /** Method para filtrar contactos por el ID de la categoría ---*/
     @Query("SELECT * FROM contactos WHERE categoria_id = :categoriaId ORDER BY nombre ASC")
     fun getContactosPorCategoria(categoriaId: Int): LiveData<List<Contacto>>
+
+    /** Para inserción en lote */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertarVarios(contactos: List<Contacto>)
+
+
+
+    /**Para obtener una lista estática y comprobar duplicados */
+    @Query("SELECT * FROM contactos")
+    suspend fun getTodosComoLista(): List<Contacto>
 }
 

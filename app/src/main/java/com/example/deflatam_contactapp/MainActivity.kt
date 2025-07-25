@@ -1,16 +1,20 @@
 package com.example.deflatam_contactapp
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -25,6 +29,7 @@ import com.example.deflatam_contactapp.utils.BackupUtils
 import com.example.deflatam_contactapp.utils.VCardUtils
 import com.example.deflatam_contactapp.viewmodel.ContactosViewModel
 import com.example.deflatam_contactapp.viewmodel.ContactosViewModelFactory
+import com.example.deflatam_contactapp.viewmodel.EstadoImportacion
 import com.google.android.material.snackbar.Snackbar
 
 
@@ -43,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         ContactosViewModelFactory(repository)
     }
 
-    // Launcher para crear el archivo de backup
+    /**Launcher para crear el archivo de backup*/
     private val crearBackupLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let {
             viewModel.contactos.value?.let { contactos ->
@@ -54,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Launcher para abrir el archivo de backup
+    /**Launcher para abrir el archivo de backup*/
     private val restaurarBackupLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let {
             val contactosRestaurados = BackupUtils.restaurarDesdeBackup(this, it)
@@ -68,6 +73,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**Launcher para exportar contactos a VCard*/
     private val vcardExportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("text/vcard")) { uri ->
         uri?.let {
             val contactos = viewModel.getContactosParaExportar()
@@ -89,12 +95,46 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**Launcher para solicitar el permiso de lectura de contactos */
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                // Permiso concedido, procedemos a importar.
+                viewModel.importarContactosDelDispositivo(contentResolver)
+            } else {
+                // Permiso denegado. Informamos al usuario.
+                Toast.makeText(this, "Permiso necesario para importar contactos.", Toast.LENGTH_LONG).show()
+            }
+        }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
+
+        // Observar el estado de la importacion
+        viewModel.estadoImportacion.observe(this) { estado ->
+            when (estado) {
+                EstadoImportacion.CARGANDO -> {
+                    binding.progressBar.visibility = View.VISIBLE
+                }
+                EstadoImportacion.EXITO -> {
+                    binding.progressBar.visibility = View.GONE
+                    Toast.makeText(this, "Contactos importados.", Toast.LENGTH_SHORT).show()
+                    viewModel.resetearEstadoImportacion()
+                }
+                EstadoImportacion.ERROR -> {
+                    binding.progressBar.visibility = View.GONE
+                    Toast.makeText(this, "Error al importar.", Toast.LENGTH_SHORT).show()
+                    viewModel.resetearEstadoImportacion()
+                }
+                else -> { // VACIO
+                    binding.progressBar.visibility = View.GONE
+                }
+            }
+        }
 
         setupRecyclerView()
         setupListeners()
@@ -133,7 +173,6 @@ class MainActivity : AppCompatActivity() {
                 }.show()
             }
         }
-
         ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.recyclerViewContactos)
     }
 
@@ -181,6 +220,10 @@ class MainActivity : AppCompatActivity() {
                 exportarContactosAVCard()
                 true
             }
+            R.id.action_import_device -> {
+                iniciarImportacionDeContactos()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -188,5 +231,22 @@ class MainActivity : AppCompatActivity() {
     private fun exportarContactosAVCard() {
         val nombreArchivo = "contactos_backup.vcf"
         vcardExportLauncher.launch(nombreArchivo)
+    }
+
+    /**Función que gestiona la solicitud de permiso e inicia la importación */
+    private fun iniciarImportacionDeContactos() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_CONTACTS
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // El permiso ya está concedido.
+                viewModel.importarContactosDelDispositivo(contentResolver)
+            }
+            else -> {
+                // El permiso no está concedido, lo solicitamos.
+                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+            }
+        }
     }
 }

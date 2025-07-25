@@ -16,4 +16,9 @@
         android:id="@+id/action_export_vcard"
         android:title="Exportar a vCard (.vcf)"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_import_device"
+        android:title="Importar desde dispositivo"
+        app:showAsAction="never" />
 </menu>

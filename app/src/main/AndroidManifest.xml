@@ -8,6 +8,9 @@
         el acceso a archivos al usuario de forma segura.
     -->
 
+    <!--Permiso para leer los contactos del dispositivo  -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
