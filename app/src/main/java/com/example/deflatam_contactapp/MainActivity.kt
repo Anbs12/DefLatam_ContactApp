@@ -2,6 +2,7 @@ package com.example.deflatam_contactapp
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -21,6 +22,7 @@ import com.example.deflatam_contactapp.databinding.ActivityMainBinding
 import com.example.deflatam_contactapp.model.Contacto
 import com.example.deflatam_contactapp.repository.ContactosRepository
 import com.example.deflatam_contactapp.utils.BackupUtils
+import com.example.deflatam_contactapp.utils.VCardUtils
 import com.example.deflatam_contactapp.viewmodel.ContactosViewModel
 import com.example.deflatam_contactapp.viewmodel.ContactosViewModelFactory
 import com.google.android.material.snackbar.Snackbar
@@ -62,6 +64,27 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "${contactosRestaurados.size} contactos restaurados.", Toast.LENGTH_LONG).show()
             } else {
                 Toast.makeText(this, "Error al restaurar la copia de seguridad.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private val vcardExportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("text/vcard")) { uri ->
+        uri?.let {
+            val contactos = viewModel.getContactosParaExportar()
+            if (contactos.isNullOrEmpty()) {
+                Toast.makeText(this, "No hay contactos para exportar.", Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
+            }
+
+            try {
+                val vcardString = VCardUtils.exportToVCard(contactos)
+                contentResolver.openOutputStream(it)?.use { outputStream ->
+                    outputStream.write(vcardString.toByteArray())
+                }
+                Toast.makeText(this, "Contactos exportados correctamente.", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "Error al exportar: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("MainActivity", "Error exportando a VCard", e)
             }
         }
     }
@@ -154,7 +177,16 @@ class MainActivity : AppCompatActivity() {
                 restaurarBackupLauncher.launch("application/json")
                 true
             }
+            R.id.action_export_vcard -> {
+                exportarContactosAVCard()
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun exportarContactosAVCard() {
+        val nombreArchivo = "contactos_backup.vcf"
+        vcardExportLauncher.launch(nombreArchivo)
     }
 }
