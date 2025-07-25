@@ -1,6 +1,8 @@
 package com.example.deflatam_contactapp.repository
 
 
+import android.content.ContentResolver
+import android.provider.ContactsContract
 import androidx.lifecycle.LiveData
 import com.example.deflatam_contactapp.database.CategoriaDao
 import com.example.deflatam_contactapp.database.ContactoDao
@@ -84,5 +86,47 @@ class ContactosRepository(
     fun getContactoById(contactoId: Int): LiveData<Contacto> {
         return contactoDao.getContactoById(contactoId)
     }
+
+    /**
+     * Lee los contactos del dispositivo y los inserta en la BBDD local si no existen.
+     */
+    suspend fun importarDesdeDispositivo(contentResolver: ContentResolver) {
+        val nuevosContactos = mutableListOf<Contacto>()
+        val telefonosExistentes = contactoDao.getTodosComoLista().map { it.telefono }.toSet()
+
+        val projection = arrayOf(
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+            ContactsContract.CommonDataKinds.Phone.NUMBER
+        )
+
+        val cursor = contentResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            projection,
+            null,
+            null,
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
+        )
+
+        cursor?.use {
+            val nameIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+            val numberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+
+            while (it.moveToNext()) {
+                val nombre = it.getString(nameIndex)
+                val telefono = it.getString(numberIndex).replace("\\s".toRegex(), "") // Limpiar espacios
+
+                // Evitar duplicados basados en el número de teléfono
+                if (telefono.isNotBlank() && !telefonosExistentes.contains(telefono)) {
+                    // Por defecto, se asigna a la categoría 1 (o la que se prefiera)
+                    nuevosContactos.add(Contacto(nombre = nombre, telefono = telefono, email = "", categoriaId = 1))
+                }
+            }
+        }
+
+        if (nuevosContactos.isNotEmpty()) {
+            contactoDao.insertarVarios(nuevosContactos)
+        }
+    }
+
 
 }

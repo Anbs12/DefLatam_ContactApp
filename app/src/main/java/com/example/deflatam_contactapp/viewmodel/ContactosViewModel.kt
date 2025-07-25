@@ -1,5 +1,6 @@
 package com.example.deflatam_contactapp.viewmodel
 
+import android.content.ContentResolver
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -10,6 +11,8 @@ import com.example.deflatam_contactapp.model.Contacto
 import com.example.deflatam_contactapp.repository.ContactosRepository
 import kotlinx.coroutines.launch
 
+/**Enum para representar los estados de la importacion*/
+enum class EstadoImportacion { VACIO, CARGANDO, EXITO, ERROR }
 
 /**
  * ViewModel para gestionar la lista principal de contactos.
@@ -17,6 +20,10 @@ import kotlinx.coroutines.launch
 class ContactosViewModel(private val repository: ContactosRepository) : ViewModel() {
 
     private val _searchQuery = MutableLiveData<String>("")
+
+    /**LiveData para comunicar el estado de la importación a la UI */
+    private val _estadoImportacion = MutableLiveData<EstadoImportacion>(EstadoImportacion.VACIO)
+    val estadoImportacion: LiveData<EstadoImportacion> get() = _estadoImportacion
 
     /**
      * LiveData que expone la lista de contactos, se actualiza según la búsqueda.
@@ -48,6 +55,28 @@ class ContactosViewModel(private val repository: ContactosRepository) : ViewMode
      */
     fun getContactosParaExportar(): List<Contacto>? {
         return contactos.value
+    }
+
+    /**
+     * Inicia el proceso de importación de contactos desde el dispositivo.
+     * @param contentResolver El ContentResolver necesario para consultar los contactos del sistema.
+     */
+    fun importarContactosDelDispositivo(contentResolver: ContentResolver) {
+        viewModelScope.launch {
+            _estadoImportacion.value = EstadoImportacion.CARGANDO
+            try {
+                repository.importarDesdeDispositivo(contentResolver)
+                _estadoImportacion.value = EstadoImportacion.EXITO
+            } catch (e: Exception) {
+                // Puedes pasar el mensaje de error si quieres ser más específico
+                _estadoImportacion.value = EstadoImportacion.ERROR
+            }
+        }
+    }
+
+    /**Función para resetear el estado de importación */
+    fun resetearEstadoImportacion() {
+        _estadoImportacion.value = EstadoImportacion.VACIO
     }
 }
 
