@@ -4,7 +4,7 @@ package com.example.deflatam_contactapp.database
 
 import androidx.lifecycle.LiveData
 import androidx.room.*
-import com.sakhura.contactos.model.*
+
 
 @Dao
 interface GrupoDao {

@@ -9,45 +9,57 @@ import androidx.room.Query
 import androidx.room.Update
 import com.example.deflatam_contactapp.model.Contacto
 
+
 /**
- * Define las operaciones de base de datos para la entidad Contacto.
- * Permite realizar consultas, inserciones, actualizaciones y eliminaciones.
+ * Objeto de Acceso a Datos (DAO) para la entidad Contacto.
  */
 @Dao
 interface ContactoDao {
 
     /**
      * Inserta un nuevo contacto en la base de datos.
-     * Si el contacto ya existe, la operación se ignora.
      */
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertarContacto(contacto: Contacto)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(contacto: Contacto)
 
     /**
      * Actualiza un contacto existente en la base de datos.
-     * La búsqueda del contacto se hace por su clave primaria.
      */
     @Update
-    suspend fun actualizarContacto(contacto: Contacto)
+    suspend fun update(contacto: Contacto)
 
     /**
      * Elimina un contacto de la base de datos.
-     * La búsqueda del contacto se hace por su clave primaria.
      */
     @Delete
-    suspend fun eliminarContacto(contacto: Contacto)
+    suspend fun delete(contacto: Contacto)
 
     /**
-     * Obtiene todos los contactos ordenados alfabéticamente.
-     * Retorna un LiveData para observar cambios en tiempo real.
+     * Obtiene todos los contactos ordenados por nombre.
      */
     @Query("SELECT * FROM contactos ORDER BY nombre ASC")
-    fun obtenerTodosLosContactos(): LiveData<List<Contacto>>
+    fun getAllContactos(): LiveData<List<Contacto>>
 
     /**
-     * Busca contactos cuyo nombre coincida con la consulta.
-     * La búsqueda no distingue mayúsculas de minúsculas.
+     * Busca contactos cuyo nombre o teléfono coincidan con la consulta.
      */
-    @Query("SELECT * FROM contactos WHERE nombre LIKE :query ORDER BY nombre ASC")
-    fun buscarContactos(query: String): LiveData<List<Contacto>>
+    @Query("SELECT * FROM contactos WHERE nombre LIKE :searchQuery OR telefono LIKE :searchQuery ORDER BY nombre ASC")
+    fun searchContactos(searchQuery: String): LiveData<List<Contacto>>
+
+    /**
+     * Obtiene todos los contactos para una copia de seguridad (no como LiveData).
+     */
+    @Query("SELECT * FROM contactos")
+    suspend fun getAllContactosForBackup(): List<Contacto>
+
+    /**
+     * Obtiene un contacto unico por su ID.
+     */
+    @Query("SELECT * FROM contactos WHERE id = :contactoId")
+    fun getContactoById(contactoId: Int): LiveData<Contacto>
+
+    /** Method para filtrar contactos por el ID de la categoría ---*/
+    @Query("SELECT * FROM contactos WHERE categoria_id = :categoriaId ORDER BY nombre ASC")
+    fun getContactosPorCategoria(categoriaId: Int): LiveData<List<Contacto>>
 }
+

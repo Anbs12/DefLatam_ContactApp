@@ -9,65 +9,70 @@ import com.example.deflatam_contactapp.databinding.ItemContactoBinding
 import com.example.deflatam_contactapp.model.Contacto
 
 /**
- * Adaptador para mostrar la lista de contactos en un RecyclerView.
- * Usa Data Binding y maneja los clics en los items.
+ * Adaptador para el RecyclerView que muestra la lista de contactos.
+ * Utiliza ListAdapter para manejar eficientemente las actualizaciones de la lista.
+ * @param onItemClicked Lambda que se ejecuta cuando se hace clic en un contacto.
  */
-class ContactosAdapter(
-    private val onItemClicked: (Contacto) -> Unit,
-    private val onContactoLongClicked: (Contacto) -> Unit
-) :
-    ListAdapter<Contacto, ContactosAdapter.ContactoViewHolder>(ContactosComparator()) {
+class ContactosAdapter(private val onItemClicked: (Contacto) -> Unit) :
+    ListAdapter<Contacto, ContactosAdapter.ContactoViewHolder>(DiffCallback) {
 
     /**
-     * Crea un ViewHolder inflando el layout con Data Binding.
+     * ViewHolder que contiene la vista de un solo item de contacto.
      */
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactoViewHolder {
-        val binding = ItemContactoBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
-        return ContactoViewHolder(binding)
-    }
-
-    /**
-     * Vincula los datos del contacto con el ViewHolder y establece el listener de clic.
-     */
-    override fun onBindViewHolder(holder: ContactoViewHolder, position: Int) {
-        val contactoActual = getItem(position)
-        holder.itemView.setOnClickListener {
-            onItemClicked(contactoActual)
-        }
-        holder.bind(contactoActual)
-        // Se asigna el listener para la pulsación larga
-        holder.itemView.setOnLongClickListener {
-            onContactoLongClicked(contactoActual)
-            true // Indica que el evento se ha consumido
-        }
-    }
-
-    /**
-     * ViewHolder que usa Data Binding para vincular el objeto Contacto a la vista.
-     */
-    class ContactoViewHolder(private val binding: ItemContactoBinding) :
+    inner class ContactoViewHolder(private var binding: ItemContactoBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
+        /**
+         * Vincula los datos del contacto a las vistas del layout.
+         */
         fun bind(contacto: Contacto) {
+            // Usa el data binding para asignar el objeto contacto a la variable del layout
             binding.contacto = contacto
-            binding.executePendingBindings() // Fuerza la actualización inmediata del binding
+            // Llama a executePendingBindings() para forzar la actualización inmediata del layout.
+            // Es una buena práctica para evitar problemas de reciclaje de vistas.
+            binding.executePendingBindings()
         }
     }
 
     /**
-     * Comparador para que ListAdapter actualice la lista de forma eficiente.
+     * Callback para calcular las diferencias entre dos listas de contactos.
      */
-    class ContactosComparator : DiffUtil.ItemCallback<Contacto>() {
+    companion object DiffCallback : DiffUtil.ItemCallback<Contacto>() {
+        /**
+         * Comprueba si los items son los mismos (por su ID).
+         */
         override fun areItemsTheSame(oldItem: Contacto, newItem: Contacto): Boolean {
             return oldItem.id == newItem.id
         }
 
+        /**
+         * Comprueba si el contenido de los items ha cambiado.
+         */
         override fun areContentsTheSame(oldItem: Contacto, newItem: Contacto): Boolean {
+            // La data class genera automáticamente el método equals(), que compara todos los campos.
             return oldItem == newItem
         }
+    }
+
+    /**
+     * Crea nuevos ViewHolders cuando el RecyclerView lo necesita.
+     */
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactoViewHolder {
+        val layoutInflater = LayoutInflater.from(parent.context)
+        // Infla el layout del item usando ViewBinding
+        val binding = ItemContactoBinding.inflate(layoutInflater, parent, false)
+        return ContactoViewHolder(binding)
+    }
+
+    /**
+     * Vincula los datos de un contacto a un ViewHolder en una posición específica.
+     */
+    override fun onBindViewHolder(holder: ContactoViewHolder, position: Int) {
+        val contacto = getItem(position)
+        // Configura el listener para el clic en el item
+        holder.itemView.setOnClickListener {
+            onItemClicked(contacto)
+        }
+        holder.bind(contacto)
     }
 }
