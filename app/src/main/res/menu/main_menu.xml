@@ -3,12 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/action_backup"
-        android:title="Crear copia de seguridad"
         android:icon="@drawable/ic_backup"
+        android:title="Crear copia de seguridad"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_restore"
-        android:title="Restaurar copia"
         android:icon="@drawable/ic_restore"
+        android:title="Restaurar copia"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_export_vcard"
+        android:title="Exportar a vCard (.vcf)"
+        app:showAsAction="never" />
 </menu>

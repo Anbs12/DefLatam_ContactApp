@@ -42,6 +42,13 @@ class ContactosViewModel(private val repository: ContactosRepository) : ViewMode
     fun eliminarContacto(contacto: Contacto) = viewModelScope.launch {
         repository.eliminarContacto(contacto)
     }
+
+    /**
+     * Devuelve el valor actual de la lista de contactos.
+     */
+    fun getContactosParaExportar(): List<Contacto>? {
+        return contactos.value
+    }
 }
 
 /**
