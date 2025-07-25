@@ -5,9 +5,13 @@ import android.content.ContentResolver
 import android.provider.ContactsContract
 import androidx.lifecycle.LiveData
 import com.example.deflatam_contactapp.database.CategoriaDao
+import com.example.deflatam_contactapp.database.ContactoConGrupos
 import com.example.deflatam_contactapp.database.ContactoDao
+import com.example.deflatam_contactapp.database.ContactoGrupoCrossRef
+import com.example.deflatam_contactapp.database.GrupoDao
 import com.example.deflatam_contactapp.model.Categoria
 import com.example.deflatam_contactapp.model.Contacto
+import com.example.deflatam_contactapp.model.Grupo
 
 
 /**
@@ -15,7 +19,8 @@ import com.example.deflatam_contactapp.model.Contacto
  */
 class ContactosRepository(
     private val contactoDao: ContactoDao,
-    private val categoriaDao: CategoriaDao
+    private val categoriaDao: CategoriaDao,
+    private val grupoDao: GrupoDao
 ) {
 
     /**
@@ -38,8 +43,8 @@ class ContactosRepository(
     /**
      * Inserta un nuevo contacto en la base de datos.
      */
-    suspend fun insertarContacto(contacto: Contacto) {
-        contactoDao.insert(contacto)
+    suspend fun insertarContacto(contacto: Contacto): Long {
+        return contactoDao.insert(contacto)
     }
 
     /**
@@ -125,6 +130,34 @@ class ContactosRepository(
 
         if (nuevosContactos.isNotEmpty()) {
             contactoDao.insertarVarios(nuevosContactos)
+        }
+    }
+
+    /** Obtiene todos los grupos. */
+    val todosLosGrupos: LiveData<List<Grupo>> = grupoDao.getTodosLosGrupos()
+
+    /** Crea un nuevo grupo. */
+    suspend fun crearGrupo(grupo: Grupo) {
+        grupoDao.crearGrupo(grupo)
+    }
+
+    /** Obtiene los grupos de un contacto. */
+    fun getGruposDeUnContacto(contactoId: Int): LiveData<ContactoConGrupos> {
+        return grupoDao.getGruposDeUnContacto(contactoId)
+    }
+
+    /**
+     * Actualiza las asociaciones de un contacto a los grupos.
+     * Borra las antiguas y añade las nuevas.
+     */
+    suspend fun actualizarGruposDeContacto(contactoId: Int, nuevosGrupoIds: List<Int>) {
+
+        // Limpiamos referencias viejas
+        //grupoDao.limpiarGruposDeContacto(contactoId)
+
+        // Añadimos las nuevas
+        nuevosGrupoIds.forEach { grupoId ->
+            grupoDao.addContactoAGrupo(ContactoGrupoCrossRef(contactoId, grupoId))
         }
     }
 

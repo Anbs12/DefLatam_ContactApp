@@ -46,6 +46,28 @@
             android:inputType="phone" />
     </com.google.android.material.textfield.TextInputLayout>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Grupos"
+        android:textAppearance="?attr/textAppearanceLabelLarge" />
+
+    <TextView
+        android:id="@+id/tv_grupos_seleccionados"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        tools:text="Familia, Trabajo" />
+
+    <Button
+        android:id="@+id/btn_seleccionar_grupos"
+        style="?attr/materialButtonOutlinedStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Seleccionar Grupos" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/textFieldEmail"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"

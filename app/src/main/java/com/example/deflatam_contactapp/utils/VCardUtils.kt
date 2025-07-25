@@ -36,6 +36,20 @@ object VCardUtils {
                 vcardBuilder.append("EMAIL;\n")
             }
 
+            //LInkedin
+            if (contacto.linkedin != null) {
+                vcardBuilder.append("Linkedin:https://www.linkedin.com/in/${contacto.linkedin}\n")
+            }else{
+                vcardBuilder.append("Linkedin;\n")
+            }
+
+            //Web site
+            if (contacto.website != null){
+                vcardBuilder.append("website:${contacto.website}\n")
+            }else{
+                vcardBuilder.append("website;\n")
+            }
+
             vcardBuilder.append("END:VCARD\n\n") // Doble salto de línea para separar entradas
         }
         return vcardBuilder.toString()

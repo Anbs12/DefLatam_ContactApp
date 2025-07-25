@@ -20,7 +20,7 @@ interface ContactoDao {
      * Inserta un nuevo contacto en la base de datos.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(contacto: Contacto)
+    suspend fun insert(contacto: Contacto) : Long
 
     /**
      * Actualiza un contacto existente en la base de datos.
