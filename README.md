@@ -14,6 +14,6 @@ con Room Database y LiveData.
  Retos Adicionales
  - ✅Sincronización con contactos del dispositivo
  - ✅Exportar contactos a vCard
- - Integración con redes sociales
- - Llamadas y mensajes directos
+ - ✅Integración con redes sociales
+ - ✅Llamadas y mensajes directos
  - Grupos de contactos
