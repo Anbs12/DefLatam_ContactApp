@@ -12,9 +12,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
@@ -46,7 +44,7 @@ class MainActivity : AppCompatActivity(), OnContactActionListener {
     private val viewModel: ContactosViewModel by viewModels {
         // Inicializa el ViewModel usando la fábrica para inyectar el repositorio.
         val database = ContactosDatabase.getDatabase(context = applicationContext, coroutineScope = lifecycleScope)
-        val repository = ContactosRepository(database.contactoDao(), database.categoriaDao())
+        val repository = ContactosRepository(database.contactoDao(), database.categoriaDao(), database.grupoDao())
         ContactosViewModelFactory(repository)
     }
 
@@ -194,7 +192,7 @@ class MainActivity : AppCompatActivity(), OnContactActionListener {
         ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.recyclerViewContactos)
     }
 
-    // --- NUEVO: Implementación de los métodos de la interfaz ---
+    // Implementación de los métodos de la interfaz
     override fun onCallClick(telefono: String) {
         numeroParaLlamar = telefono
         when {
@@ -245,7 +243,7 @@ class MainActivity : AppCompatActivity(), OnContactActionListener {
         openUrl(properUrl)
     }
 
-    // --- NUEVO: Función auxiliar para realizar la llamada ---
+    //Función auxiliar para realizar la llamada ---
     private fun realizarLlamada(telefono: String) {
         try {
             val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$telefono"))

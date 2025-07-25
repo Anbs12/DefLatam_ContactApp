@@ -1,19 +1,21 @@
 package com.example.deflatam_contactapp
 
-import android.R
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.deflatam_contactapp.database.ContactosDatabase
 import com.example.deflatam_contactapp.databinding.ActivityAgregarContactoBinding
 import com.example.deflatam_contactapp.model.Categoria
 import com.example.deflatam_contactapp.model.Contacto
+import com.example.deflatam_contactapp.model.Grupo
 import com.example.deflatam_contactapp.repository.ContactosRepository
 import com.example.deflatam_contactapp.utils.ValidationUtils
 import com.example.deflatam_contactapp.viewmodel.AgregarContactoViewModel
@@ -26,15 +28,27 @@ class AgregarContactoActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityAgregarContactoBinding
     private var contactoId: Int? = null
-    private var contactoExistente : Contacto? = null
+    private var contactoExistente: Contacto? = null
 
     private var listaCategorias = listOf<Categoria>()
     private var categoriaSeleccionadaId: Int = -1
 
+    // Listas para manejar la selección de grupos
+    private var listaTodosLosGrupos = listOf<Grupo>()
+    private var idsGruposSeleccionados = mutableSetOf<Int>()
+
     private val viewModel: AgregarContactoViewModel by viewModels {
-        val database = ContactosDatabase.getDatabase(context = applicationContext, coroutineScope = lifecycleScope)
-        val repository = ContactosRepository(database.contactoDao(), database.categoriaDao())
+        val database = ContactosDatabase.getDatabase(
+            context = applicationContext,
+            coroutineScope = lifecycleScope
+        )
+        val repository = ContactosRepository(
+            database.contactoDao(),
+            database.categoriaDao(),
+            database.grupoDao()
+        )
         AgregarContactoViewModelFactory(repository)
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +63,7 @@ class AgregarContactoActivity : AppCompatActivity() {
         observeViewModel()
         setupSpinner()
         observarCategorias()
+        setupGroupSelection()
     }
 
     /**
@@ -145,11 +160,12 @@ class AgregarContactoActivity : AppCompatActivity() {
             website = website
         )
 
-        if (contactoId == null) {
+        /*if (contactoId == null) {
             viewModel.insertarContacto(contacto)
         } else {
             viewModel.actualizarContacto(contacto)
-        }
+        }*/
+        viewModel.guardarContactoYAsociarGrupos(contacto, idsGruposSeleccionados.toList())
     }
 
     /**
@@ -160,13 +176,14 @@ class AgregarContactoActivity : AppCompatActivity() {
             categorias?.let {
                 listaCategorias = it
                 val nombresCategorias = it.map { cat -> cat.nombre }
-                val adapter = ArrayAdapter(this, R.layout.simple_spinner_item, nombresCategorias)
+                val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, nombresCategorias)
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 binding.spinnerCategoria.adapter = adapter
 
                 // Si estamos editando, pre-seleccionar la categoria correcta
                 contactoExistente?.let { contacto ->
-                    val categoriaDelContacto = listaCategorias.find { c -> c.id == contacto.categoriaId }
+                    val categoriaDelContacto =
+                        listaCategorias.find { c -> c.id == contacto.categoriaId }
                     val posicion = listaCategorias.indexOf(categoriaDelContacto)
                     if (posicion != -1) {
                         binding.spinnerCategoria.setSelection(posicion)
@@ -180,14 +197,104 @@ class AgregarContactoActivity : AppCompatActivity() {
      * Configura el listener del Spinner para obtener la categoría seleccionada.
      */
     private fun setupSpinner() {
-        binding.spinnerCategoria.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (listaCategorias.isNotEmpty()) {
-                    categoriaSeleccionadaId = listaCategorias[position].id
+        binding.spinnerCategoria.onItemSelectedListener =
+            object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    if (listaCategorias.isNotEmpty()) {
+                        categoriaSeleccionadaId = listaCategorias[position].id
+                    }
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }
+    }
+
+    /** Configura la selección de grupos. */
+    private fun setupGroupSelection() {
+        // Observar la lista de todos los grupos disponibles
+        viewModel.todosLosGrupos.observe(this) { grupos ->
+            listaTodosLosGrupos = grupos
+        }
+
+        // Observar los grupos a los que ya pertenece el contacto (si se está editando)
+        viewModel.gruposDelContacto.observe(this) { contactoConGrupos ->
+            idsGruposSeleccionados = contactoConGrupos.grupos.map { it.id }.toMutableSet()
+            actualizarTextoGruposSeleccionados()
+        }
+
+        binding.btnSeleccionarGrupos.setOnClickListener {
+            mostrarDialogoSeleccionGrupos()
+        }
+    }
+
+    /**
+     * Muestra un diálogo para seleccionar grupos.
+     */
+    private fun mostrarDialogoSeleccionGrupos() {
+        val nombresGrupos = listaTodosLosGrupos.map { it.nombre }.toTypedArray()
+        val checkedItems = listaTodosLosGrupos.map { idsGruposSeleccionados.contains(it.id) }.toBooleanArray()
+
+        AlertDialog.Builder(this)
+            .setTitle("Seleccionar Grupos")
+            .setMultiChoiceItems(nombresGrupos, checkedItems) { _, which, isChecked ->
+                val id = listaTodosLosGrupos[which].id
+                if (isChecked) {
+                    idsGruposSeleccionados.add(id)
+                } else {
+                    idsGruposSeleccionados.remove(id)
                 }
             }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+            .setPositiveButton("Aceptar") { dialog, _ ->
+                actualizarTextoGruposSeleccionados()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancelar", null)
+            .setNeutralButton("Crear Grupo") { _, _ ->
+                // No cerramos el diálogo actual, sino que abrimos otro encima.
+                mostrarDialogoCrearGrupo()
+            }
+            .show()
+    }
+
+    private fun mostrarDialogoCrearGrupo() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Crear Nuevo Grupo")
+
+        // Crear un EditText para la entrada del usuario
+        val input = EditText(this)
+        input.hint = "Nombre del grupo"
+        builder.setView(input)
+
+        builder.setPositiveButton("Guardar") { dialog, _ ->
+            val nombreGrupo = input.text.toString().trim()
+            if (nombreGrupo.isNotEmpty()) {
+                viewModel.crearNuevoGrupo(nombreGrupo)
+                Toast.makeText(this, "Grupo '$nombreGrupo' creado.", Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+                // Idealmente, aquí se debería reabrir el diálogo de selección para
+                // que el nuevo grupo aparezca inmediatamente. Por simplicidad,
+                // el usuario necesitará tocar "Seleccionar Grupos" de nuevo.
+            } else {
+                Toast.makeText(this, "El nombre no puede estar vacío.", Toast.LENGTH_SHORT).show()
+            }
         }
+        builder.setNegativeButton("Cancelar") { dialog, _ -> dialog.cancel() }
+
+        builder.show()
+    }
+
+    /** Actualiza el texto de los grupos seleccionados. */
+    private fun actualizarTextoGruposSeleccionados() {
+        val nombresSeleccionados = listaTodosLosGrupos
+            .filter { idsGruposSeleccionados.contains(it.id) }
+            .joinToString(separator = ", ") { it.nombre }
+
+        binding.tvGruposSeleccionados.text = if (nombresSeleccionados.isEmpty()) "Ninguno" else nombresSeleccionados
     }
 
     /**
