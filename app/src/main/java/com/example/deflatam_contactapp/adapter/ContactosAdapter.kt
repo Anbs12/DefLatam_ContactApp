@@ -8,12 +8,21 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.deflatam_contactapp.databinding.ItemContactoBinding
 import com.example.deflatam_contactapp.model.Contacto
 
+/** interfaz para manejar los eventos de clic en los botones de llamada y mensaje.*/
+interface OnContactActionListener {
+    fun onCallClick(telefono: String)
+    fun onMessageClick(telefono: String)
+    fun onItemClick(contacto: Contacto)
+    fun onLinkedinClick(profile: String)
+    fun onWebsiteClick(url: String)
+}
+
 /**
  * Adaptador para el RecyclerView que muestra la lista de contactos.
  * Utiliza ListAdapter para manejar eficientemente las actualizaciones de la lista.
  * @param onItemClicked Lambda que se ejecuta cuando se hace clic en un contacto.
  */
-class ContactosAdapter(private val onItemClicked: (Contacto) -> Unit) :
+class ContactosAdapter(private val listener: OnContactActionListener) :
     ListAdapter<Contacto, ContactosAdapter.ContactoViewHolder>(DiffCallback) {
 
     /**
@@ -25,12 +34,35 @@ class ContactosAdapter(private val onItemClicked: (Contacto) -> Unit) :
         /**
          * Vincula los datos del contacto a las vistas del layout.
          */
-        fun bind(contacto: Contacto) {
+        fun bind(contacto: Contacto, actionListener: OnContactActionListener) {
             // Usa el data binding para asignar el objeto contacto a la variable del layout
             binding.contacto = contacto
             // Llama a executePendingBindings() para forzar la actualización inmediata del layout.
             // Es una buena práctica para evitar problemas de reciclaje de vistas.
             binding.executePendingBindings()
+
+            //Configurar listeners para los botones y el item completo ---
+            binding.ivCall.setOnClickListener {
+                actionListener.onCallClick(contacto.telefono)
+            }
+
+            binding.ivMessage.setOnClickListener {
+                actionListener.onMessageClick(contacto.telefono)
+            }
+
+            itemView.setOnClickListener {
+                actionListener.onItemClick(contacto)
+            }
+            binding.ivLinkedin.setOnClickListener {
+                if (contacto.linkedin.isNotEmpty()) {
+                    actionListener.onLinkedinClick(contacto.linkedin)
+                }
+            }
+            binding.ivWebsite.setOnClickListener {
+                if (contacto.website.isNotEmpty()) {
+                    actionListener.onWebsiteClick(contacto.website)
+                }
+            }
         }
     }
 
@@ -70,9 +102,6 @@ class ContactosAdapter(private val onItemClicked: (Contacto) -> Unit) :
     override fun onBindViewHolder(holder: ContactoViewHolder, position: Int) {
         val contacto = getItem(position)
         // Configura el listener para el clic en el item
-        holder.itemView.setOnClickListener {
-            onItemClicked(contacto)
-        }
-        holder.bind(contacto)
+        holder.bind(contacto, listener)
     }
 }

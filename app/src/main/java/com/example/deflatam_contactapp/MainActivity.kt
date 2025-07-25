@@ -3,6 +3,7 @@ package com.example.deflatam_contactapp
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -21,6 +22,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.deflatam_contactapp.adapter.ContactosAdapter
+import com.example.deflatam_contactapp.adapter.OnContactActionListener
 import com.example.deflatam_contactapp.database.ContactosDatabase
 import com.example.deflatam_contactapp.databinding.ActivityMainBinding
 import com.example.deflatam_contactapp.model.Contacto
@@ -36,7 +38,7 @@ import com.google.android.material.snackbar.Snackbar
 /**
  * Actividad principal que muestra la lista de contactos.
  */
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), OnContactActionListener {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: ContactosAdapter
@@ -47,6 +49,20 @@ class MainActivity : AppCompatActivity() {
         val repository = ContactosRepository(database.contactoDao(), database.categoriaDao())
         ContactosViewModelFactory(repository)
     }
+
+    /**Variable para guardar el número a llamar mientras se pide permiso */
+    private var numeroParaLlamar: String? = null
+
+    /**Launcher para solicitar el permiso de llamada */
+    private val requestCallPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+            if (isGranted) {
+                // Permiso concedido, intentamos llamar de nuevo.
+                numeroParaLlamar?.let { realizarLlamada(it) }
+            } else {
+                Toast.makeText(this, "Permiso de llamada denegado.", Toast.LENGTH_SHORT).show()
+            }
+        }
 
     /**Launcher para crear el archivo de backup*/
     private val crearBackupLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -145,13 +161,14 @@ class MainActivity : AppCompatActivity() {
      * Configura el RecyclerView, su adaptador y el gesto de deslizar para eliminar.
      */
     private fun setupRecyclerView() {
-        adapter = ContactosAdapter { contacto ->
+        /*adapter = ContactosAdapter { contacto ->
             // Click en un item: abre la actividad para editar el contacto seleccionado
             val intent = Intent(this, AgregarContactoActivity::class.java).apply {
                 putExtra(AgregarContactoActivity.EXTRA_CONTACTO_ID, contacto.id)
             }
             startActivity(intent)
-        }
+        }*/
+        adapter = ContactosAdapter(this)
         binding.recyclerViewContactos.layoutManager = LinearLayoutManager(this)
         binding.recyclerViewContactos.adapter = adapter
 
@@ -167,13 +184,75 @@ class MainActivity : AppCompatActivity() {
                 viewModel.eliminarContacto(contactoEliminado)
 
                 // Muestra un Snackbar con opción de deshacer
-                Snackbar.make(binding.root, "Contacto eliminado", Snackbar.LENGTH_LONG).setAction("DESHACER") {
-                    // Si el usuario deshace, volvemos a insertar el contacto.
-                    // Esta funcionalidad requeriría un método en el ViewModel.
-                }.show()
+                Snackbar.make(binding.root, "Contacto eliminado", Snackbar.LENGTH_LONG).show()
+                    /*.setAction("DESHACER") {
+                        // Si el usuario deshace, volvemos a insertar el contacto.
+                        // Esta funcionalidad requeriría un método en el ViewModel.
+                    }*/
             }
         }
         ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(binding.recyclerViewContactos)
+    }
+
+    // --- NUEVO: Implementación de los métodos de la interfaz ---
+    override fun onCallClick(telefono: String) {
+        numeroParaLlamar = telefono
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CALL_PHONE
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                // Permiso ya concedido.
+                realizarLlamada(telefono)
+            }
+            else -> {
+                // Solicitar permiso.
+                requestCallPermissionLauncher.launch(Manifest.permission.CALL_PHONE)
+            }
+        }
+    }
+
+    override fun onMessageClick(telefono: String) {
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("smsto:$telefono")
+        }
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(intent)
+        } else {
+            Toast.makeText(this, "No se encontró app para enviar SMS.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onItemClick(contacto: Contacto) {
+        // La acción de clic en toda la fila sigue funcionando para editar
+        val intent = Intent(this, AgregarContactoActivity::class.java)
+        intent.putExtra("EXTRA_CONTACTO_ID", contacto.id)
+        startActivity(intent)
+    }
+
+    override fun onLinkedinClick(profile: String) {
+        val url = "https://www.linkedin.com/in/$profile"
+        openUrl(url)
+    }
+
+    override fun onWebsiteClick(url: String) {
+        // Asegurarse de que la URL tenga un esquema
+        val properUrl = if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            "http://$url"
+        } else {
+            url
+        }
+        openUrl(properUrl)
+    }
+
+    // --- NUEVO: Función auxiliar para realizar la llamada ---
+    private fun realizarLlamada(telefono: String) {
+        try {
+            val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$telefono"))
+            startActivity(intent)
+        } catch (e: SecurityException) {
+            Toast.makeText(this, "Error de seguridad al intentar llamar.", Toast.LENGTH_SHORT).show()
+        }
     }
 
     /**
@@ -247,6 +326,18 @@ class MainActivity : AppCompatActivity() {
                 // El permiso no está concedido, lo solicitamos.
                 requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             }
+        }
+    }
+
+    /**
+     * Función de utilidad para abrir una URL en el navegador.
+     */
+    private fun openUrl(url: String) {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "No se puede abrir el enlace.", Toast.LENGTH_SHORT).show()
         }
     }
 }

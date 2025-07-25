@@ -68,6 +68,8 @@ class AgregarContactoActivity : AppCompatActivity() {
                     binding.editTextNombre.setText(contacto.nombre)
                     binding.editTextTelefono.setText(contacto.telefono)
                     binding.editTextEmail.setText(contacto.email)
+                    binding.etLinkedin.setText(contacto.linkedin)
+                    binding.etWebsite.setText(contacto.website)
                 } else {
                     Toast.makeText(this, "Contacto no encontrado", Toast.LENGTH_LONG).show()
                     finish()
@@ -110,6 +112,8 @@ class AgregarContactoActivity : AppCompatActivity() {
         val telefono = binding.editTextTelefono.text.toString().trim()
         val email = binding.editTextEmail.text.toString().trim()
         val categoriaId = categoriaSeleccionadaId
+        val linkedin = binding.etLinkedin.text.toString().trim()
+        val website = binding.etWebsite.text.toString().trim()
 
         // Limpia errores previos
         binding.textFieldNombre.error = null
@@ -136,7 +140,9 @@ class AgregarContactoActivity : AppCompatActivity() {
             nombre = nombre,
             telefono = telefono,
             email = email,
-            categoriaId = categoriaId
+            categoriaId = categoriaId,
+            linkedin = linkedin,
+            website = website
         )
 
         if (contactoId == null) {
