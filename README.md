@@ -16,4 +16,4 @@ con Room Database y LiveData.
  - ✅Exportar contactos a vCard
  - ✅Integración con redes sociales
  - ✅Llamadas y mensajes directos
- - Grupos de contactos
+ - ✅Grupos de contactos
