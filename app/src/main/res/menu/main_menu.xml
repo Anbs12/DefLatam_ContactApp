@@ -1,21 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-
-    <item
-        android:id="@+id/action_search"
-        android:icon="@android:drawable/ic_menu_search"
-        android:title="Buscar"
-        app:actionViewClass="androidx.appcompat.widget.SearchView"
-        app:showAsAction="ifRoom|collapseActionView" />
-
     <item
         android:id="@+id/action_backup"
-        android:title="Crear Backup"
-        app:showAsAction="never" />
-
+        android:title="Crear copia de seguridad"
+        android:icon="@drawable/ic_backup"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_restore"
-        android:title="Restaurar Backup"
-        app:showAsAction="never" />
+        android:title="Restaurar copia"
+        android:icon="@drawable/ic_restore"
+        app:showAsAction="ifRoom" />
 </menu>

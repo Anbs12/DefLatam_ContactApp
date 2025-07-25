@@ -1,69 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Contenedor raíz para habilitar Data Binding -->
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Variable de datos para vincular el objeto Contacto -->
     <data>
+
         <variable
             name="contacto"
             type="com.example.deflatam_contactapp.model.Contacto" />
     </data>
 
-    <!-- CardView para dar un aspecto moderno y con sombra a cada ítem -->
-    <com.google.android.material.card.MaterialCardView
+    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="8dp"
-        android:layout_marginVertical="4dp"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="4dp">
+        android:layout_margin="8dp"
+        android:elevation="4dp"
+        android:radius="8dp"
+        android:padding="16dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Icono para el contacto -->
-            <ImageView
-                android:id="@+id/imageViewIcono"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/ic_person"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:contentDescription="Icono de contacto"/> <!-- Asegúrate de tener este icono -->
-
-            <!-- Nombre del contacto, vinculado con Data Binding -->
             <TextView
                 android:id="@+id/textViewNombre"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
                 android:text="@{contacto.nombre}"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large"
-                app:layout_constraintStart_toEndOf="@id/imageViewIcono"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                tools:text="Nombre Apellido" />
+                android:textAppearance="?attr/textAppearanceListItem"
+                android:textSize="18sp"
+                tools:text="Nombre del Contacto" />
 
-            <!-- Teléfono del contacto, vinculado con Data Binding -->
             <TextView
                 android:id="@+id/textViewTelefono"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="4dp"
                 android:text="@{contacto.telefono}"
-                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-                app:layout_constraintStart_toEndOf="@id/imageViewIcono"
-                app:layout_constraintTop_toBottomOf="@id/textViewNombre"
-                app:layout_constraintEnd_toEndOf="parent"
-                tools:text="123456789" />
+                android:textAppearance="?attr/textAppearanceListItemSecondary"
+                tools:text="123-456-7890" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
-    </com.google.android.material.card.MaterialCardView>
 </layout>
+

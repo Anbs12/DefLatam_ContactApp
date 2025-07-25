@@ -5,8 +5,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Representa una categoría para organizar los contactos.
- * Cada instancia es una fila en la tabla 'categorias'.
+ * Representa una categoría para un contacto.
  */
 @Entity(tableName = "categorias")
 data class Categoria(

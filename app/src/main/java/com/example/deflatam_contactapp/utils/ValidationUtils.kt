@@ -4,33 +4,29 @@ package com.example.deflatam_contactapp.utils
 import android.util.Patterns
 
 /**
- * Objeto de utilidad para validar campos de formulario.
- * Contiene funciones estáticas para validar diferentes tipos de datos.
+ * Objeto de utilidad para realizar validaciones en los formularios.
  */
 object ValidationUtils {
 
     /**
-     * Valida que el nombre no esté vacío.
-     * Retorna true si el nombre es válido, de lo contrario false.
+     * Valida que el nombre del contacto no esté vacío.
      */
     fun isNombreValido(nombre: String): Boolean {
         return nombre.isNotBlank()
     }
 
     /**
-     * Valida que el teléfono no esté vacío y sea un número de teléfono válido.
-     * Retorna true si el teléfono es válido.
+     * Valida que el número de teléfono no esté vacío.
      */
     fun isTelefonoValido(telefono: String): Boolean {
-        return telefono.isNotBlank() && Patterns.PHONE.matcher(telefono).matches()
+        return telefono.isNotBlank()
     }
 
     /**
-     * Valida que el email tenga un formato de correo electrónico correcto.
-     * Retorna true si el email es válido o si está vacío (opcional).
+     * Valida que el email tenga un formato correcto (si se ha introducido uno).
      */
     fun isEmailValido(email: String): Boolean {
-        // El email puede ser opcional, por lo que si está vacío, es válido.
+        // El email es opcional, pero si se escribe, debe ser válido.
         return email.isBlank() || Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 }

@@ -8,23 +8,20 @@ import androidx.room.Query
 import com.example.deflatam_contactapp.model.Categoria
 
 /**
- * Define las operaciones de base de datos para la entidad Categoria.
- * Permite realizar consultas e inserciones de categorías.
+ * Objeto de Acceso a Datos (DAO) para la entidad Categoria.
  */
 @Dao
 interface CategoriaDao {
 
     /**
      * Inserta una nueva categoría en la base de datos.
-     * Si la categoría ya existe, se ignora.
      */
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertarCategoria(categoria: Categoria)
+    suspend fun insert(categoria: Categoria)
 
     /**
-     * Obtiene todas las categorías ordenadas alfabéticamente.
-     * Retorna un LiveData para observar cambios en tiempo real.
+     * Obtiene todas las categorías de la base de datos como LiveData.
      */
     @Query("SELECT * FROM categorias ORDER BY nombre ASC")
-    fun obtenerTodasLasCategorias(): LiveData<List<Categoria>>
+    fun getAllCategorias(): LiveData<List<Categoria>>
 }
