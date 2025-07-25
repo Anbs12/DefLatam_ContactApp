@@ -28,5 +28,8 @@ data class Contacto(
     val email: String?,
 
     @ColumnInfo(name = "categoria_id", index = true)
-    val categoriaId: Int?
+    val categoriaId: Int?,
+
+    val linkedin: String = "", // Se guardará solo el path del perfil (ej: "juanperez")
+    val website: String = ""   // Se guardará la URL completa
 )
