@@ -1,3 +1,10 @@
+
+# Para ejecutar
+
+Compilar e instalar app en movil o emulador.
+
+------------------
+
 Conceptos: Room Database, MVVM, LiveData, Data Binding
 
  Objetivo: Crear una aplicación completa de gestión de contactos implementando arquitectura MVVM 
