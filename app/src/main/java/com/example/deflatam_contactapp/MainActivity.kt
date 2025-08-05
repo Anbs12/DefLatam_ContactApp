@@ -14,6 +14,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -124,9 +128,27 @@ class MainActivity : AppCompatActivity(), OnContactActionListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
+
+        val mainContainer = findViewById<View>(R.id.activity_main) // Obtén tu contenedor principal
+
+        ViewCompat.setOnApplyWindowInsetsListener(mainContainer) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+
+            // Aplica padding a tu contenedor principal para evitar las barras del sistema
+            view.updatePadding(
+                left = insets.left,
+                top = insets.top,
+                right = insets.right,
+                bottom = insets.bottom
+            )
+
+            // Devuelve los insets consumidos o los originales si no los consumes completamente
+            WindowInsetsCompat.CONSUMED // O puedes devolver windowInsets si otras vistas también necesitan procesarlos
+        }
 
         // Observar el estado de la importacion
         viewModel.estadoImportacion.observe(this) { estado ->
