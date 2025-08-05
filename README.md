@@ -1,4 +1,4 @@
-# Gestor de Contactos Avanzado 📞
+# Gestor de Contactos 📞
 
 Una aplicación robusta para Android diseñada para una gestión eficiente de tus contactos, implementando una arquitectura moderna y persistencia de datos fiable con **Kotlin**.
 
